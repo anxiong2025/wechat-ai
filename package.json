@@ -1,10 +1,10 @@
 {
-  "name": "wxai",
+  "name": "wx-ai",
   "version": "0.1.0",
   "description": "WeChat AI Bot — Bridge WeChat to Claude, Qwen, DeepSeek and more",
   "type": "module",
   "bin": {
-    "wxai": "./dist/cli.js"
+    "wx-ai": "./dist/cli.js"
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

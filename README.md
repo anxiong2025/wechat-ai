@@ -7,22 +7,22 @@
 </p>
 
 ```bash
-npm i -g wxai
-wxai set qwen sk-xxx
-wxai
+npm i -g wx-ai
+wx-ai set qwen sk-xxx
+wx-ai
 ```
 
 ## 支持模型
 
 | 模型 | 默认版本 | 设置 Key |
 |------|---------|---------|
-| 通义千问 (Qwen) | qwen-plus | `wxai set qwen <key>` |
-| DeepSeek | deepseek-chat | `wxai set deepseek <key>` |
-| Claude | claude-opus-4-6 (Agent) | `wxai set claude <key>` |
-| GPT | gpt-4o | `wxai set gpt <key>` |
-| Gemini | gemini-2.0-flash | `wxai set gemini <key>` |
-| MiniMax | MiniMax-Text-01 | `wxai set minimax <key>` |
-| 智谱 (GLM) | glm-4-plus | `wxai set zhipu <key>` |
+| 通义千问 (Qwen) | qwen-plus | `wx-ai set qwen <key>` |
+| DeepSeek | deepseek-chat | `wx-ai set deepseek <key>` |
+| Claude | claude-opus-4-6 (Agent) | `wx-ai set claude <key>` |
+| GPT | gpt-4o | `wx-ai set gpt <key>` |
+| Gemini | gemini-2.0-flash | `wx-ai set gemini <key>` |
+| MiniMax | MiniMax-Text-01 | `wx-ai set minimax <key>` |
+| 智谱 (GLM) | glm-4-plus | `wx-ai set zhipu <key>` |
 
 支持任何 OpenAI 兼容 API，编辑 `~/.wai/config.json` 即可添加。
 
@@ -32,23 +32,23 @@ Claude 通过 [Agent SDK](https://github.com/anthropics/claude-agent-sdk-typescr
 
 ```bash
 # 方式一：直接运行（无需安装）
-npx wxai
+npx wx-ai
 
 # 方式二：全局安装
-npm i -g wxai
+npm i -g wx-ai
 
 # 方式三：克隆源码
-git clone https://github.com/anxiong2025/wx-bot.git
-cd wx-bot && npm install && npm run build && node dist/cli.js
+git clone https://github.com/anxiong2025/wx-ai.git
+cd wx-ai && npm install && npm run build && node dist/cli.js
 ```
 
 ## 命令
 
 ```bash
-wxai                        # 启动（首次自动弹出二维码）
-wxai set <模型> <key>        # 保存 API Key
-wxai use <模型>              # 设置默认模型
-wxai config                 # 查看配置（Key 已脱敏）
+wx-ai                        # 启动（首次自动弹出二维码）
+wx-ai set <模型> <key>        # 保存 API Key
+wx-ai use <模型>              # 设置默认模型
+wx-ai config                 # 查看配置（Key 已脱敏）
 ```
 
 ### 微信内指令
