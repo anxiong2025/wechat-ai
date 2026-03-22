@@ -7,23 +7,23 @@ import { setLogLevel, createLogger } from "./logger.js";
 const log = createLogger("cli");
 
 const HELP = `
-  \x1b[1mwx-ai\x1b[0m — WeChat AI Bot
+  \x1b[1mwechat-ai\x1b[0m — WeChat AI Bot
 
   \x1b[1m命令:\x1b[0m
-    wx-ai                        启动 (首次自动扫码登录)
-    wx-ai set <provider> <key>   设置模型 API Key
-    wx-ai use <provider>         设置默认模型
-    wx-ai config                 查看当前配置
-    wx-ai help                   显示帮助
+    wechat-ai                        启动 (首次自动扫码登录)
+    wechat-ai set <provider> <key>   设置模型 API Key
+    wechat-ai use <provider>         设置默认模型
+    wechat-ai config                 查看当前配置
+    wechat-ai help                   显示帮助
 
   \x1b[1m设置 API Key:\x1b[0m
-    wx-ai set qwen sk-xxx        设置通义千问 Key
-    wx-ai set deepseek sk-xxx    设置 DeepSeek Key
-    wx-ai set claude sk-xxx      设置 Claude Key
+    wechat-ai set qwen sk-xxx        设置通义千问 Key
+    wechat-ai set deepseek sk-xxx    设置 DeepSeek Key
+    wechat-ai set claude sk-xxx      设置 Claude Key
 
   \x1b[1m设置默认模型:\x1b[0m
-    wx-ai use qwen               默认使用 Qwen
-    wx-ai use deepseek           默认使用 DeepSeek
+    wechat-ai use qwen               默认使用 Qwen
+    wechat-ai use deepseek           默认使用 DeepSeek
 
   \x1b[1m微信指令:\x1b[0m
     /model             查看当前模型
@@ -52,8 +52,8 @@ async function main() {
       const apiKey = args[2];
 
       if (!provider || !apiKey) {
-        console.log("用法: wx-ai set <provider> <key>");
-        console.log("示例: wx-ai set qwen sk-xxx");
+        console.log("用法: wechat-ai set <provider> <key>");
+        console.log("示例: wechat-ai set qwen sk-xxx");
         process.exit(1);
       }
 
@@ -114,7 +114,7 @@ async function main() {
       process.on("SIGINT", shutdown);
       process.on("SIGTERM", shutdown);
 
-      log.info("启动 wx-ai...");
+      log.info("启动 wechat-ai...");
       await gateway.start();
       break;
     }

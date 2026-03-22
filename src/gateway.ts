@@ -191,7 +191,7 @@ export class Gateway {
         await channel.send({
           targetId: msg.senderId,
           text: [
-            "wx-ai 指令:",
+            "wechat-ai 指令:",
             "/model [名称] - 切换AI模型",
             "/help - 显示帮助",
             "/ping - 检查状态",

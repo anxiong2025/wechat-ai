@@ -1,28 +1,28 @@
-# wx-ai
+# wechat-ai
 
 微信 AI 机器人 — 一条命令连接微信与任意 AI 模型。
 
 <p align="center">
-  <img src="docs/screenshot.png" width="800" alt="wx-ai screenshot" />
+  <img src="docs/screenshot.png" width="800" alt="wechat-ai screenshot" />
 </p>
 
 ```bash
-npm i -g wx-ai
-wx-ai set qwen sk-xxx
-wx-ai
+npm i -g wechat-ai
+wechat-ai set qwen sk-xxx
+wechat-ai
 ```
 
 ## 支持模型
 
 | 模型 | 默认版本 | 设置 Key |
 |------|---------|---------|
-| 通义千问 (Qwen) | qwen-plus | `wx-ai set qwen <key>` |
-| DeepSeek | deepseek-chat | `wx-ai set deepseek <key>` |
-| Claude | claude-opus-4-6 (Agent) | `wx-ai set claude <key>` |
-| GPT | gpt-4o | `wx-ai set gpt <key>` |
-| Gemini | gemini-2.0-flash | `wx-ai set gemini <key>` |
-| MiniMax | MiniMax-Text-01 | `wx-ai set minimax <key>` |
-| 智谱 (GLM) | glm-4-plus | `wx-ai set zhipu <key>` |
+| 通义千问 (Qwen) | qwen-plus | `wechat-ai set qwen <key>` |
+| DeepSeek | deepseek-chat | `wechat-ai set deepseek <key>` |
+| Claude | claude-opus-4-6 (Agent) | `wechat-ai set claude <key>` |
+| GPT | gpt-4o | `wechat-ai set gpt <key>` |
+| Gemini | gemini-2.0-flash | `wechat-ai set gemini <key>` |
+| MiniMax | MiniMax-Text-01 | `wechat-ai set minimax <key>` |
+| 智谱 (GLM) | glm-4-plus | `wechat-ai set zhipu <key>` |
 
 支持任何 OpenAI 兼容 API，编辑 `~/.wai/config.json` 即可添加。
 
@@ -32,23 +32,23 @@ Claude 通过 [Agent SDK](https://github.com/anthropics/claude-agent-sdk-typescr
 
 ```bash
 # 方式一：直接运行（无需安装）
-npx wx-ai
+npx wechat-ai
 
 # 方式二：全局安装
-npm i -g wx-ai
+npm i -g wechat-ai
 
 # 方式三：克隆源码
-git clone https://github.com/anxiong2025/wx-ai.git
-cd wx-ai && npm install && npm run build && node dist/cli.js
+git clone https://github.com/anxiong2025/wechat-ai.git
+cd wechat-ai && npm install && npm run build && node dist/cli.js
 ```
 
 ## 命令
 
 ```bash
-wx-ai                        # 启动（首次自动弹出二维码）
-wx-ai set <模型> <key>        # 保存 API Key
-wx-ai use <模型>              # 设置默认模型
-wx-ai config                 # 查看配置（Key 已脱敏）
+wechat-ai                        # 启动（首次自动弹出二维码）
+wechat-ai set <模型> <key>        # 保存 API Key
+wechat-ai use <模型>              # 设置默认模型
+wechat-ai config                 # 查看配置（Key 已脱敏）
 ```
 
 ### 微信内指令
@@ -64,7 +64,7 @@ wx-ai config                 # 查看配置（Key 已脱敏）
 ## 架构
 
 ```
-微信 ──ilink──> wx-ai 网关 ──路由──> AI 模型
+微信 ──ilink──> wechat-ai 网关 ──路由──> AI 模型
                     │                   │
                会话管理            ┌────┴────┐
                模型路由            │         │
@@ -104,10 +104,10 @@ src/
 - [x] 多模型切换 (`/model`)
 - [x] 输入状态提示
 - [x] 7 个内置模型
+- [x] npm 发布
 - [ ] 图片/文件收发
 - [ ] Telegram / Discord 渠道
 - [ ] MCP 支持
-- [ ] npm 发布
 
 ## 协议
 
