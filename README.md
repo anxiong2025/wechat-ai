@@ -2,6 +2,10 @@
 
 微信 AI 机器人 — 一条命令连接微信与任意 AI 模型。
 
+<p align="center">
+  <img src="docs/screenshot.png" width="800" alt="wx-ai screenshot" />
+</p>
+
 ```bash
 npm i -g wxai
 wxai set qwen sk-xxx
