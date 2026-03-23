@@ -1,3 +1,4 @@
+import { createServer, type Server, type IncomingMessage, type ServerResponse } from "node:http";
 import { createLogger } from "./logger.js";
 import type {
   Channel,
@@ -5,6 +6,8 @@ import type {
   InboundMessage,
   WaiConfig,
   ProviderOptions,
+  Middleware,
+  Context,
 } from "./types.js";
 import { WeixinChannel } from "./channels/weixin.js";
 import { ClaudeAgentProvider } from "./providers/claude-agent.js";
@@ -29,9 +32,19 @@ export class Gateway {
   private processing = new Set<string>();
   // Queue for messages that arrive while AI is processing
   private queues = new Map<string, InboundMessage[]>();
+  // Middleware stack
+  private middlewares: Middleware[] = [];
+  // Webhook HTTP server
+  private webhookServer: Server | null = null;
 
   constructor(config: WaiConfig) {
     this.config = config;
+  }
+
+  /** Register a middleware function */
+  use(middleware: Middleware): this {
+    this.middlewares.push(middleware);
+    return this;
   }
 
   init(): void {
@@ -75,6 +88,8 @@ export class Gateway {
       throw new Error("未配置任何模型");
     }
 
+    this.startWebhook();
+
     const startPromises = [...this.channels.entries()].map(([name, channel]) => {
       log.info(`启动渠道: ${name}`);
       return channel.start((msg) => this.handleMessage(msg)).catch((err) => {
@@ -87,6 +102,10 @@ export class Gateway {
 
   async stop(): Promise<void> {
     log.info("正在关闭...");
+    if (this.webhookServer) {
+      this.webhookServer.close();
+      this.webhookServer = null;
+    }
     const stops = [...this.channels.values()].map((ch) => ch.stop());
     await Promise.allSettled(stops);
     log.info("已关闭");
@@ -161,37 +180,51 @@ export class Gateway {
     try {
       const providerName = this.config.userRoutes?.[msg.senderId]
         || this.config.defaultProvider;
-      const provider = this.providers.get(providerName);
-
-      if (!provider) {
-        log.error(`模型 "${providerName}" 未找到`);
-        return;
-      }
-
-      log.info(`调用 ${providerName} 处理中...`);
-
       const channel = this.channels.get(msg.channel);
-      if (channel && "sendTyping" in channel) {
-        (channel as any).sendTyping(msg.senderId, msg.replyToken);
-      }
-
-      const options: ProviderOptions = {};
-      if (this.config.systemPrompt) {
-        options.systemPrompt = this.config.systemPrompt;
-      }
-
-      const sessionKey = `${msg.channel}:${msg.senderId}`;
-      const response = await provider.query(msg.text, sessionKey, options);
-
       if (!channel) return;
 
-      await channel.send({
-        targetId: msg.senderId,
-        text: response,
-        replyToken: msg.replyToken,
-      });
+      const ctx: Context = {
+        message: msg,
+        provider: providerName,
+        channel,
+        sessionKey: key,
+        state: {},
+      };
 
-      log.info(`已回复 (${response.length} 字符)`);
+      // Build the middleware chain with AI call as the innermost handler
+      const coreHandler: Middleware = async (c) => {
+        const provider = this.providers.get(c.provider);
+        if (!provider) {
+          log.error(`模型 "${c.provider}" 未找到`);
+          return;
+        }
+
+        log.info(`调用 ${c.provider} 处理中...`);
+
+        if ("sendTyping" in c.channel) {
+          (c.channel as any).sendTyping(c.message.senderId, c.message.replyToken);
+        }
+
+        const options: ProviderOptions = {};
+        if (this.config.systemPrompt) {
+          options.systemPrompt = this.config.systemPrompt;
+        }
+
+        c.response = await provider.query(c.message.text, c.sessionKey, options);
+      };
+
+      // Compose: middlewares + core handler (Koa-style onion model)
+      await this.compose(ctx, [...this.middlewares, coreHandler]);
+
+      // Send response if available
+      if (ctx.response) {
+        await channel.send({
+          targetId: msg.senderId,
+          text: ctx.response,
+          replyToken: msg.replyToken,
+        });
+        log.info(`已回复 (${ctx.response.length} 字符)`);
+      }
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : String(err);
       log.error(`处理消息失败: ${errMsg}`);
@@ -211,6 +244,96 @@ export class Gateway {
     } finally {
       this.processing.delete(key);
     }
+  }
+
+  private async compose(ctx: Context, stack: Middleware[]): Promise<void> {
+    let index = -1;
+    const dispatch = async (i: number): Promise<void> => {
+      if (i <= index) throw new Error("next() called multiple times");
+      index = i;
+      const fn = stack[i];
+      if (!fn) return;
+      await fn(ctx, () => dispatch(i + 1));
+    };
+    await dispatch(0);
+  }
+
+  private startWebhook(): void {
+    const webhookConfig = this.config.webhook;
+    if (!webhookConfig?.enabled) return;
+
+    const port = webhookConfig.port || 4800;
+    const secret = webhookConfig.secret;
+
+    this.webhookServer = createServer(async (req: IncomingMessage, res: ServerResponse) => {
+      // Only accept POST
+      if (req.method !== "POST") {
+        res.writeHead(405, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Method not allowed" }));
+        return;
+      }
+
+      // Auth check
+      if (secret && req.headers["authorization"] !== `Bearer ${secret}`) {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
+        return;
+      }
+
+      // Parse body
+      let body: string;
+      try {
+        body = await new Promise<string>((resolve, reject) => {
+          const chunks: Buffer[] = [];
+          req.on("data", (chunk: Buffer) => chunks.push(chunk));
+          req.on("end", () => resolve(Buffer.concat(chunks).toString()));
+          req.on("error", reject);
+        });
+      } catch {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Failed to read body" }));
+        return;
+      }
+
+      let payload: { channel?: string; targetId?: string; text?: string };
+      try {
+        payload = JSON.parse(body);
+      } catch {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Invalid JSON" }));
+        return;
+      }
+
+      const { channel: channelName, targetId, text } = payload;
+      if (!channelName || !targetId || !text) {
+        res.writeHead(400, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Missing required fields: channel, targetId, text" }));
+        return;
+      }
+
+      const channel = this.channels.get(channelName);
+      if (!channel) {
+        res.writeHead(404, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: `Channel "${channelName}" not found` }));
+        return;
+      }
+
+      try {
+        await channel.send({ targetId, text });
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ ok: true }));
+        log.info(`Webhook: 已发送消息到 ${channelName}:${targetId}`);
+      } catch (err) {
+        const errMsg = err instanceof Error ? err.message : String(err);
+        log.error(`Webhook 发送失败: ${errMsg}`);
+        res.writeHead(500, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Failed to send message" }));
+      }
+    });
+
+    this.webhookServer.listen(port, () => {
+      log.info(`Webhook 服务已启动: http://localhost:${port}`);
+    });
   }
 
   private async handleCommand(msg: InboundMessage): Promise<void> {

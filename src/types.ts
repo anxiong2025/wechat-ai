@@ -98,7 +98,36 @@ export interface Provider {
   ): AsyncIterable<ProviderResponse>;
 }
 
+// ── Middleware ──
+
+export interface Context {
+  /** The inbound message */
+  message: InboundMessage;
+  /** Set this to override the AI response (skips provider call) */
+  response?: string;
+  /** The resolved provider name */
+  provider: string;
+  /** The channel instance */
+  channel: Channel;
+  /** Session key (channel:senderId) */
+  sessionKey: string;
+  /** Arbitrary data shared between middlewares */
+  state: Record<string, unknown>;
+}
+
+export type NextFunction = () => Promise<void>;
+export type Middleware = (ctx: Context, next: NextFunction) => Promise<void>;
+
 // ── Configuration ──
+
+export interface WebhookConfig {
+  /** Enable webhook HTTP server */
+  enabled?: boolean;
+  /** Port to listen on (default: 4800) */
+  port?: number;
+  /** Optional secret token for authentication */
+  secret?: string;
+}
 
 export interface WaiConfig {
   /** Default AI provider to use */
@@ -118,6 +147,9 @@ export interface WaiConfig {
 
   /** Message chunk size limit */
   chunkSize?: number;
+
+  /** Webhook HTTP server config */
+  webhook?: WebhookConfig;
 }
 
 export interface ProviderConfig {

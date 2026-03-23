@@ -15,4 +15,7 @@ export type {
   ProviderOptions,
   ProviderResponse,
   MediaAttachment,
+  Context,
+  Middleware,
+  NextFunction,
 } from "./types.js";
