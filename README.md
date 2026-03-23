@@ -49,6 +49,7 @@ wechat-ai                        # 启动（首次自动弹出二维码）
 wechat-ai set <模型> <key>        # 保存 API Key
 wechat-ai use <模型>              # 设置默认模型
 wechat-ai config                 # 查看配置（Key 已脱敏）
+wechat-ai update                 # 更新到最新版
 ```
 
 ### 微信内指令

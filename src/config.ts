@@ -76,7 +76,29 @@ export async function loadConfig(): Promise<WaiConfig> {
   }
 
   const raw = await readFile(CONFIG_PATH, "utf-8");
-  return { ...DEFAULT_CONFIG, ...JSON.parse(raw) } as WaiConfig;
+  const user = JSON.parse(raw) as Partial<WaiConfig>;
+
+  // Deep merge: default providers + user providers (user overrides per provider)
+  const providers = { ...DEFAULT_CONFIG.providers };
+  if (user.providers) {
+    for (const [key, val] of Object.entries(user.providers)) {
+      providers[key] = val;
+    }
+  }
+
+  const config = { ...DEFAULT_CONFIG, ...user, providers } as WaiConfig;
+
+  // Migrate: zhipu → glm
+  if (config.providers.zhipu) {
+    if (!config.providers.glm) {
+      config.providers.glm = { ...config.providers.zhipu, apiKeyEnv: "GLM_API_KEY" };
+    }
+    delete config.providers.zhipu;
+    if (config.defaultProvider === "zhipu") config.defaultProvider = "glm";
+    await saveConfig(config);
+  }
+
+  return config;
 }
 
 export async function saveConfig(config: WaiConfig): Promise<void> {

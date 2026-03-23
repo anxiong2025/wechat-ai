@@ -14,6 +14,7 @@ const HELP = `
     wechat-ai set <provider> <key>   设置模型 API Key
     wechat-ai use <provider>         设置默认模型
     wechat-ai config                 查看当前配置
+    wechat-ai update                 更新到最新版
     wechat-ai help                   显示帮助
 
   \x1b[1m设置 API Key:\x1b[0m
@@ -87,6 +88,19 @@ async function main() {
       config.defaultProvider = provider;
       await saveConfig(config);
       console.log(`\x1b[32m✓\x1b[0m 默认模型已切换到 ${provider}`);
+      break;
+    }
+
+    case "update": {
+      const { execSync } = await import("node:child_process");
+      console.log("正在更新 wechat-ai...");
+      try {
+        execSync("npm i -g wechat-ai@latest", { stdio: "inherit" });
+        console.log("\x1b[32m✓\x1b[0m 更新完成");
+      } catch {
+        console.error("\x1b[31m✗\x1b[0m 更新失败，请手动执行: npm i -g wechat-ai@latest");
+        process.exit(1);
+      }
       break;
     }
 
