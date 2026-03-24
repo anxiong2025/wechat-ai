@@ -17,9 +17,14 @@ npm i -g wechat-ai
 ### 2. 设置 API Key（任选一个模型）
 
 ```bash
+# macOS / Linux
 wechat-ai set qwen sk-xxx        # 通义千问
 wechat-ai set deepseek sk-xxx    # DeepSeek
 wechat-ai set gemini AIza-xxx    # Gemini
+
+# Windows（Key 需要加引号，避免特殊字符被 cmd 解析）
+wechat-ai set qwen "sk-xxx"
+wechat-ai set deepseek "sk-xxx"
 ```
 
 ### 3. 启动
