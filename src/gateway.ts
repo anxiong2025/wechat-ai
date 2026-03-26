@@ -603,6 +603,20 @@ export class Gateway {
     const cmd = parts[0]!.toLowerCase();
     const arg = parts[1];
 
+    // Shortcut: /cc → claude, /模型名 → switch model directly
+    const ALIASES: Record<string, string> = { "/cc": "claude" };
+    const aliasTarget = ALIASES[cmd] || (cmd.startsWith("/") && this.providers.has(cmd.slice(1)) ? cmd.slice(1) : null);
+    if (aliasTarget && this.providers.has(aliasTarget)) {
+      if (!this.config.userRoutes) this.config.userRoutes = {};
+      this.config.userRoutes[msg.senderId] = aliasTarget;
+      await channel.send({
+        targetId: msg.senderId,
+        text: `已切换到: ${aliasTarget}`,
+        replyToken: msg.replyToken,
+      });
+      return;
+    }
+
     switch (cmd) {
       case "/model": {
         if (!arg) {
@@ -737,9 +751,12 @@ export class Gateway {
             "/help - 显示帮助",
             "/ping - 检查状态",
             "",
+            "快捷切换模型:",
+            "/cc → Claude  /qwen /deepseek /gpt 等",
+            "",
             "@ 快捷方式:",
+            "@模型名 <问题> - 临时用指定模型",
             "@画图 <描述> - 生成图片",
-            "@模型名 <问题> - 临时用指定模型回答",
           ].join("\n"),
           replyToken: msg.replyToken,
         });

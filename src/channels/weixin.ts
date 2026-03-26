@@ -715,10 +715,9 @@ export class WeixinChannel implements Channel {
         await unlink(file);
       }
     }
-    // Also clear tokens file
-    const tokensFile = join(getAccountsDir(), "weixin-tokens.json");
-    if (existsSync(tokensFile)) {
-      await unlink(tokensFile);
+    for (const f of ["weixin-tokens.json", "weixin-guide-sent.json"]) {
+      const p = join(getAccountsDir(), f);
+      if (existsSync(p)) await unlink(p);
     }
   }
 
@@ -805,20 +804,56 @@ export class WeixinChannel implements Channel {
 
   // ── Startup greeting ──
 
+  private guideSentFile(): string {
+    return join(getAccountsDir(), "weixin-guide-sent.json");
+  }
+
+  private async loadGuideSent(): Promise<Set<string>> {
+    const path = this.guideSentFile();
+    if (!existsSync(path)) return new Set();
+    try {
+      const raw = await readFile(path, "utf-8");
+      return new Set(JSON.parse(raw) as string[]);
+    } catch {
+      return new Set();
+    }
+  }
+
+  private async saveGuideSent(sent: Set<string>): Promise<void> {
+    await ensureDir(getAccountsDir());
+    await writeFile(this.guideSentFile(), JSON.stringify([...sent]));
+  }
+
   private async sendStartupGreeting(): Promise<void> {
     if (this.lastTokens.size === 0) return;
 
     const greeting = "Hey! I'm back online and ready to chat. Send me a message anytime! 👋";
+    const guide = [
+      "📌 快捷指南:",
+      "直接发消息即可对话",
+      "/cc 切Claude（/qwen /deepseek /gpt 可切模型）",
+      "@模型名 问题 → 临时用指定模型",
+      "/help 查看全部指令",
+    ].join("\n");
+
+    const guideSent = await this.loadGuideSent();
     log.debug(`发送启动问候给 ${this.lastTokens.size} 个用户...`);
 
     for (const [userId, token] of this.lastTokens) {
       try {
         await this.send({ targetId: userId, text: greeting, replyToken: token });
+        if (!guideSent.has(userId)) {
+          await new Promise((r) => setTimeout(r, 500));
+          await this.send({ targetId: userId, text: guide, replyToken: token });
+          guideSent.add(userId);
+        }
         log.debug(`已问候 ${userId.slice(0, 8)}...`);
       } catch {
         log.warn(`问候失败 ${userId.slice(0, 8)}... (token 可能过期)`);
       }
     }
+
+    await this.saveGuideSent(guideSent);
   }
 
   // ── Last token persistence ──

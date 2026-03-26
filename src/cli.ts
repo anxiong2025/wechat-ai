@@ -321,7 +321,7 @@ async function main() {
     case "logout": {
       const { getAccountsDir } = await import("./config.js");
       const accountsDir = getAccountsDir();
-      const files = ["weixin.json", "weixin-sync.json", "weixin-tokens.json"];
+      const files = ["weixin.json", "weixin-sync.json", "weixin-tokens.json", "weixin-guide-sent.json"];
       let cleared = false;
       for (const f of files) {
         const p = join(accountsDir, f);
