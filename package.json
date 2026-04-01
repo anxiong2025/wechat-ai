@@ -1,6 +1,6 @@
 {
   "name": "wechat-ai",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "WeChat AI Bot — Bridge WeChat to Claude, Qwen, DeepSeek and more",
   "type": "module",
   "bin": {
