@@ -9,6 +9,7 @@ export default defineConfig({
   format: "esm",
   target: "node22",
   platform: "node",
+  external: ["discord.js", "@whiskeysockets/baileys"],
   splitting: true,
   clean: true,
   dts: true,

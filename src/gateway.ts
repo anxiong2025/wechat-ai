@@ -10,6 +10,8 @@ import type {
   Context,
 } from "./types.js";
 import { WeixinChannel } from "./channels/weixin.js";
+import { DiscordChannel } from "./channels/discord.js";
+import { WhatsAppChannel } from "./channels/whatsapp.js";
 import { ClaudeAgentProvider } from "./providers/claude-agent.js";
 import { ClawAgentProvider } from "./providers/claw-agent.js";
 import { OpenAICompatibleProvider } from "./providers/openai-compatible.js";
@@ -73,6 +75,12 @@ export class Gateway {
       switch (chConfig.type) {
         case "weixin":
           this.channels.set(name, new WeixinChannel(chConfig));
+          break;
+        case "discord":
+          this.channels.set(name, new DiscordChannel(chConfig));
+          break;
+        case "whatsapp":
+          this.channels.set(name, new WhatsAppChannel(chConfig));
           break;
         default:
           log.warn(`未知渠道类型: ${chConfig.type}`);

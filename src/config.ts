@@ -68,6 +68,15 @@ const DEFAULT_CONFIG: WaiConfig = {
       type: "weixin",
       enabled: true,
     },
+    discord: {
+      type: "discord",
+      enabled: false,
+      // token: "your-bot-token",
+    },
+    whatsapp: {
+      type: "whatsapp",
+      enabled: false,
+    },
   },
   systemPrompt: "You are a helpful AI assistant. Always reply in the same language the user uses. Respond concisely.",
   chunkSize: 4000,

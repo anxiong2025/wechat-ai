@@ -41,12 +41,16 @@
     "gateway",
     "agent",
     "deepseek",
-    "qwen"
+    "qwen",
+    "discord",
+    "whatsapp"
   ],
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.2.81",
     "@modelcontextprotocol/sdk": "^1.27.1",
+    "@whiskeysockets/baileys": "^7.0.0-rc.9",
     "claw-agent-sdk": "^0.1.0",
+    "discord.js": "^14.26.0",
     "qrcode-terminal": "^0.12.0"
   },
   "devDependencies": {

@@ -88,11 +88,12 @@ function printBanner(defaultProvider: string): void {
   const sideR = inner - titleLen - sideL;
   const topBorder = `  ${b}╭${"─".repeat(sideL)}${c.reset}${c.bold}${c.white}${titleText}${c.reset}${b}${"─".repeat(sideR)}╮${c.reset}`;
 
-  // Icons: WeChat (green) ◄──► Claude (orange), centered
+  // Icons: Penguin (green) <==> Capybara (orange)
   const icons = [
-    `${c.green}╭───╮${c.reset}            ${c.orange}╭───╮${c.reset}`,
-    `${c.green}│° °│${c.reset}   ${c.dim}◄══►${c.reset}   ${c.orange}│◉ ◉│${c.reset}`,
-    `${c.green}╰─∪─╯${c.reset}            ${c.orange}╰─╮─╯${c.reset}`,
+    `${c.green}  /\\${c.reset}              ${c.orange}\\^^^/${c.reset}`,
+    `${c.green} (oo)${c.reset}    ${c.dim}<==>${c.reset}    ${c.orange}n   n${c.reset}`,
+    `${c.green}(/  \\)${c.reset}            ${c.orange}( Oo )${c.reset}`,
+    `${c.green} ^  ^${c.reset}             ${c.orange}'----'${c.reset}`,
   ];
 
   const welcome = `${c.bold}${c.white}Welcome!${c.reset}`;
@@ -350,13 +351,22 @@ async function main() {
 
     case "logout": {
       const { getAccountsDir } = await import("./config.js");
+      const { rmSync } = await import("node:fs");
       const accountsDir = getAccountsDir();
       const files = ["weixin.json", "weixin-sync.json", "weixin-tokens.json", "weixin-guide-sent.json"];
+      const dirs = ["whatsapp-auth"];
       let cleared = false;
       for (const f of files) {
         const p = join(accountsDir, f);
         if (existsSync(p)) {
           unlinkSync(p);
+          cleared = true;
+        }
+      }
+      for (const d of dirs) {
+        const p = join(accountsDir, d);
+        if (existsSync(p)) {
+          rmSync(p, { recursive: true, force: true });
           cleared = true;
         }
       }
