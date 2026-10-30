@@ -296,3 +296,15 @@ A: 能用，但免费模型可能有限流。建议用千问或 DeepSeek，价�
 
 **Q: Claude 和其他模型有什么区别？**
 A: `/cc` 走 Claude 官方 Agent SDK，质量最强。其他模型走 claw-agent-sdk，能力相同但效果取决于模型本身的智能程度。
+
+**Q: 每次上线都会发一条问候消息，能关掉或修改吗？**
+A: 可以。`wechat-ai greeting off` 关闭；`wechat-ai greeting 你好，我上线了` 自定义；`wechat-ai greeting on` 恢复默认。也可以直接编辑 `~/.wai/config.json` 里的 `channels.weixin.greeting`（`false` 为关闭）。
+
+**Q: Windows 下二维码扫不出来？**
+A: 新版在 Windows 上默认使用大尺寸二维码，并会在二维码下方打印原始链接，可粘贴到任意二维码生成工具后扫码。如果仍然显示错乱，可在 PowerShell 窗口「属性 → 字体」里换成等宽字体，或改用 Windows Terminal。也可以用环境变量 `WAI_QR_SMALL=1` / `WAI_QR_SMALL=0` 手动切换小 / 大二维码。
+
+**Q: 怎么用 Claude Pro / Max 订阅？**
+A: `/cc` 通过 Claude Agent SDK 调用 Claude。推荐用 API Key：`wechat-ai set claude sk-ant-xxx`（在 [Anthropic Console](https://console.anthropic.com/settings/keys) 申请）。未配置 Key 时，SDK 会尝试使用本机 Claude Code 的登录凭证（`~/.claude`），但 Anthropic 的条款要求基于 Agent SDK 的应用使用 API Key 认证，订阅额度能否用于此类场景请以 Anthropic 官方说明为准。
+
+**Q: 能发送语音回复吗？**
+A: 目前微信 iLink 接口不支持上传媒体（`uploadmedia` 返回 404），语音回复会自动降级为文字发送，且本次运行中不再重复尝试。

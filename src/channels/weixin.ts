@@ -1,5 +1,6 @@
 import { createLogger } from "../logger.js";
 import { getAccountsDir, ensureDir } from "../config.js";
+import { renderQr } from "../qr.js";
 import { join } from "node:path";
 import { readFile, writeFile, unlink } from "node:fs/promises";
 import { existsSync, readFileSync } from "node:fs";
@@ -18,6 +19,7 @@ const DEFAULT_BASE_URL = "https://ilinkai.weixin.qq.com";
 const CDN_BASE_URL = "https://novac2c.cdn.weixin.qq.com/c2c";
 const CHANNEL_VERSION = "1.0.3";
 const API_TIMEOUT_MS = 15_000;
+const DEFAULT_GREETING = "👋 我已上线，随时发消息给我~";
 
 // ── Message constants (from openclaw-weixin protocol) ──
 const MessageType = { USER: 1, BOT: 2 } as const;
@@ -99,6 +101,8 @@ export class WeixinChannel implements Channel {
   private guideSentCache = new Set<string>();
   // Whether startup greeting was already sent proactively
   private startupGreetingSent = false;
+  // Set once the iLink server rejects media upload (voice replies fall back to text)
+  private voiceUnsupported = false;
 
   constructor(config: ChannelConfig) {
     this.config = config;
@@ -152,12 +156,10 @@ export class WeixinChannel implements Channel {
 
     log.info("请用微信扫描二维码:");
     console.log();
-    try {
-      const qrTerminal = await import("qrcode-terminal");
-      (qrTerminal.default || qrTerminal).generate(qrUrl, { small: true });
-    } catch {
-      console.log(`  ${qrUrl}`);
-    }
+    const qr = await renderQr(qrUrl);
+    if (qr) console.log(qr);
+    console.log(`  若二维码无法识别，可将以下链接粘贴到任意二维码生成工具后扫码:`);
+    console.log(`  ${qrUrl}`);
     console.log();
 
     log.info("等待扫码...");
@@ -373,13 +375,25 @@ export class WeixinChannel implements Channel {
     }
   }
 
+  canSendVoice(): boolean {
+    return !this.voiceUnsupported;
+  }
+
+  /** Startup greeting text; null when disabled via channels.weixin.greeting = false / "" */
+  private getGreeting(): string | null {
+    const greeting = this.config.greeting;
+    if (greeting === false || greeting === "") return null;
+    if (typeof greeting === "string") return greeting;
+    return DEFAULT_GREETING;
+  }
+
   // ── Send message ──
 
   async send(msg: OutboundMessage): Promise<void> {
     if (!this.account) throw new Error("未登录");
 
     // Try sending voice if audio buffer is provided
-    if (msg.voice) {
+    if (msg.voice && !this.voiceUnsupported) {
       const sent = await this.sendVoice(msg.targetId, msg.voice, msg.replyToken);
       if (sent) return;
       log.warn("语音发送失败，降级为文本");
@@ -492,6 +506,13 @@ export class WeixinChannel implements Channel {
         body: formData,
         signal: AbortSignal.timeout(30_000),
       });
+
+      if (res.status === 404) {
+        // iLink does not expose this endpoint; stop trying for this session
+        this.voiceUnsupported = true;
+        log.warn("当前 iLink 接口不支持上传媒体 (uploadmedia 404)，语音回复将以文字发送");
+        return null;
+      }
 
       const result = await res.json() as any;
 
@@ -819,13 +840,12 @@ export class WeixinChannel implements Channel {
     try {
       // Send greeting if startup greeting wasn't sent proactively
       if (!this.startupGreetingSent) {
-        await this.send({
-          targetId: userId,
-          text: "Hey! I'm back online and ready to chat. Send me a message anytime! 👋",
-          replyToken: token,
-        });
         this.startupGreetingSent = true;
-        await new Promise((r) => setTimeout(r, 500));
+        const greeting = this.getGreeting();
+        if (greeting) {
+          await this.send({ targetId: userId, text: greeting, replyToken: token });
+          await new Promise((r) => setTimeout(r, 500));
+        }
       }
 
       // Send guide if not sent before
@@ -850,16 +870,18 @@ export class WeixinChannel implements Channel {
       return;
     }
 
-    const greeting = "Hey! I'm back online and ready to chat. Send me a message anytime! 👋";
+    const greeting = this.getGreeting();
     const guideSent = await this.loadGuideSent();
     log.debug(`发送启动问候给 ${this.lastTokens.size} 个用户...`);
 
     for (const [userId, token] of this.lastTokens) {
       try {
-        await this.send({ targetId: userId, text: greeting, replyToken: token });
+        if (greeting) {
+          await this.send({ targetId: userId, text: greeting, replyToken: token });
+        }
         // Also send guide if not sent before
         if (!guideSent.has(userId)) {
-          await new Promise((r) => setTimeout(r, 500));
+          if (greeting) await new Promise((r) => setTimeout(r, 500));
           await this.send({ targetId: userId, text: this.getGuideText(), replyToken: token });
           guideSent.add(userId);
           this.guideSentCache.add(userId);

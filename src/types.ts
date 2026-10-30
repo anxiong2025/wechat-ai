@@ -66,6 +66,9 @@ export interface Channel {
   /** Send a reply */
   send(msg: OutboundMessage): Promise<void>;
 
+  /** Whether voice replies can be sent (false skips TTS) */
+  canSendVoice?(): boolean;
+
   /** Graceful shutdown */
   stop(): Promise<void>;
 }

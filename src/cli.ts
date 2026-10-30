@@ -27,6 +27,7 @@ const HELP = `
     wechat-ai set <provider> <key>   设置模型 API Key
     wechat-ai use <provider>         设置默认模型
     wechat-ai config                 查看当前配置
+    wechat-ai greeting off           关闭上线问候 (on 恢复, 或填自定义文字)
     wechat-ai update                 更新到最新版
     wechat-ai help                   显示帮助
 
@@ -392,6 +393,31 @@ async function main() {
       if (!cleared) {
         console.log("当前没有已登录的账号");
       }
+      break;
+    }
+
+    case "greeting": {
+      const value = args.slice(1).join(" ").trim();
+      const weixin = (config.channels.weixin ??= { type: "weixin" });
+
+      if (!value) {
+        const current = weixin.greeting;
+        console.log(`当前上线问候: ${current === false || current === "" ? "已关闭" : typeof current === "string" ? current : "默认"}`);
+        console.log("用法: wechat-ai greeting off | on | <自定义文字>");
+        break;
+      }
+
+      if (value === "off") {
+        weixin.greeting = false;
+        console.log("\x1b[32m✓\x1b[0m 已关闭上线问候");
+      } else if (value === "on") {
+        delete weixin.greeting;
+        console.log("\x1b[32m✓\x1b[0m 已恢复默认上线问候");
+      } else {
+        weixin.greeting = value;
+        console.log(`\x1b[32m✓\x1b[0m 上线问候已设置为: ${value}`);
+      }
+      await saveConfig(config);
       break;
     }
 
