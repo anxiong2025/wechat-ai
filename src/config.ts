@@ -23,7 +23,7 @@ const DEFAULT_CONFIG: WaiConfig = {
     deepseek: {
       type: "claw-agent",
       baseUrl: "https://api.deepseek.com/v1",
-      model: "deepseek-chat",
+      model: "deepseek-v4-flash",
       apiKeyEnv: "DEEPSEEK_API_KEY",
     },
     gpt: {
@@ -130,6 +130,13 @@ export async function loadConfig(): Promise<WaiConfig> {
     }
     delete config.providers.zhipu;
     if (config.defaultProvider === "zhipu") config.defaultProvider = "glm";
+    await saveConfig(config);
+  }
+
+  // Migrate: deepseek-chat / deepseek-reasoner retired 2026-07-24 → deepseek-v4-flash
+  const deepseek = config.providers.deepseek;
+  if (deepseek && (deepseek.model === "deepseek-chat" || deepseek.model === "deepseek-reasoner")) {
+    deepseek.model = "deepseek-v4-flash";
     await saveConfig(config);
   }
 

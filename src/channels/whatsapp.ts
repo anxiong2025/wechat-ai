@@ -1,5 +1,6 @@
 import { createLogger } from "../logger.js";
 import { getAccountsDir, ensureDir } from "../config.js";
+import { renderQr } from "../qr.js";
 import { join } from "node:path";
 import { existsSync, rmSync } from "node:fs";
 import type { Channel, InboundMessage, OutboundMessage, ChannelConfig, MediaAttachment } from "../types.js";
@@ -117,20 +118,10 @@ export class WhatsAppChannel implements Channel {
         } else {
           log.info("请用 WhatsApp 扫描二维码:");
         }
-        try {
-          const qrTerminal = await import("qrcode-terminal");
-          // Capture QR output to count lines
-          let qrStr = "";
-          const gen = (qrTerminal.default || qrTerminal).generate as any;
-          gen(qr, { small: true }, (output: string) => {
-            qrStr = output;
-          });
-          console.log(qrStr);
-          this.qrPrintedLines = qrStr.split("\n").length + 1;
-        } catch {
-          console.log(qr);
-          this.qrPrintedLines = qr.split("\n").length + 1;
-        }
+        // Capture QR output to count lines
+        const qrStr = (await renderQr(qr)) ?? qr;
+        console.log(qrStr);
+        this.qrPrintedLines = qrStr.split("\n").length + 1;
       }
 
       if (connection === "close") {

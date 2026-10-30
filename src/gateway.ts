@@ -375,7 +375,7 @@ export class Gateway {
         let voiceBuffer: Buffer | null = null;
 
         // Voice input → try TTS for voice reply
-        if (isVoiceInput && this.config.tts?.provider !== "disabled") {
+        if (isVoiceInput && this.config.tts?.provider !== "disabled" && channel.canSendVoice?.() !== false) {
           voiceBuffer = await textToSpeech(ctx.response, this.config.tts || {});
         }
 
@@ -409,7 +409,7 @@ export class Gateway {
   }
 
   // OpenAI-compatible providers that support vision (image_url in messages)
-  // DeepSeek: deepseek-chat does NOT support vision
+  // DeepSeek: deepseek-v4-flash does NOT support vision
   private static readonly VISION_PROVIDERS = new Set([
     "qwen", "gpt", "gemini", "glm", "minimax",
   ]);

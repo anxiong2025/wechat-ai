@@ -74,6 +74,7 @@ wechat-ai                        # 启动（首次自动弹出二维码）
 wechat-ai set <模型> <key>        # 保存 API Key
 wechat-ai use <模型>              # 设置默认模型
 wechat-ai config                 # 查看配置（Key 已脱敏）
+wechat-ai greeting off           # 关闭上线问候（on 恢复默认，或直接填自定义文字）
 wechat-ai logout                 # 退出所有渠道登录
 wechat-ai logout <渠道>           # 退出指定渠道（weixin / whatsapp）
 wechat-ai start                  # 后台运行（daemon 模式）
@@ -87,7 +88,7 @@ wechat-ai update                 # 更新到最新版
 | 模型 | 默认版本 | 设置 Key | 获取 Key |
 |------|---------|---------|---------|
 | 通义千问 (Qwen) | qwen-plus | `wechat-ai set qwen <key>` | [申请](https://bailian.console.aliyun.com/cn-beijing/?tab=model#/api-key) |
-| DeepSeek | deepseek-chat | `wechat-ai set deepseek <key>` | [申请](https://platform.deepseek.com/api_keys) |
+| DeepSeek | deepseek-v4-flash | `wechat-ai set deepseek <key>` | [申请](https://platform.deepseek.com/api_keys) |
 | Claude | claude-opus-4-6 (Agent) | `wechat-ai set claude <key>` | [申请](https://console.anthropic.com/settings/keys) |
 | GPT | gpt-4o | `wechat-ai set gpt <key>` | [申请](https://platform.openai.com/api-keys) |
 | Gemini | gemini-2.0-flash | `wechat-ai set gemini <key>` | [申请](https://aistudio.google.com/apikey) |
